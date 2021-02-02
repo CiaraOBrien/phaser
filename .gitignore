@@ -1,3 +1,5 @@
 .bsp/**
 **/target
 .dotty-ide*
+*.log
+metals.sbt
