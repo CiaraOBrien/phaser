@@ -1,4 +1,4 @@
-package phaser
+/*package phaser
 
 import scala.quoted._
 
@@ -9,8 +9,14 @@ object MetaMacros {
   inline def reverseEta[A : Type, B : Type](inline f: A => B)(using q: Quotes): Expr[A] => Expr[B] = {
     import q.reflect._
     val sym = reverseEtaImpl(f)
-    println(Symbol.requiredMethod(sym).signature)
-    val ref = Ref(Symbol.requiredMethod("quux"))
+    println(sym)
+    val meth = Symbol.requiredMethod(sym)
+    val cl = TypeRepr.typeConstructorOf(java.lang.Class.forName(meth.owner.fullName))
+    println(cl)
+    val tr = TermRef(cl, meth.owner.name.toString)
+    println(Ref.term(tr))
+    val ref = Select(Ref.term(tr), meth)
+    println(ref)
     val trA = TypeRepr.of[A]
     val trB = TypeRepr.of[B]
     (e: Expr[A]) => ref.appliedTo(e.asTerm).asExprOf[B]
@@ -27,6 +33,7 @@ object MetaMacros {
       case Inlined(_, Nil, e) => rec(e)
       case _  => report.error(s"""Unable to reverse-eta-expand "${f.show}", make sure it is a simple invocation of a method name available in this stage."""); ???
     val sym = rec(f.asTerm)
+    println(sym.symbol.owner.pos.get.sourceFile)
     Expr(sym.symbol.fullName)
 
-}
+}*/

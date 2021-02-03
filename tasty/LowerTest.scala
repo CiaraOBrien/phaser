@@ -1,13 +1,12 @@
 import scala.quoted._
 import phaser._
 
-inline def lowerTest(inline str: String): Int = ${lowerTestMacro('str)}
-def lowerTestMacro(str: Expr[String])(using Quotes, Type[String], Type[Int]): Expr[Int] = {
+inline def lowerTest(inline int: Int, inline str: String): Int = ${lowerTestMacro('int, 'str)}
+def lowerTestMacro(int: Expr[Int], str: Expr[String])(using Quotes, Type[String], Type[Int]): Expr[Int] = {
   import quotes.reflect._
-
-  val f = Phunction((s: String) => s.length, (e: Expr[String]) => '{ $e.length }).compose(Phunction(Foo.quux, '{Foo.quux}))
+  val f = Phunction((s: String) => s.length, (e: Expr[String]) => '{ $e.length }).compose(Phunction(test.Foo.Bar.quux, '{test.Foo.Bar.quux}))
   println(f)
-  val p1 = Phaser.lift(str)
+  val p1 = str.require("String", _.nonEmpty, "must not be empty")
   println(p1.toString + " => " + f(p1).toString)
   val p2 = Phaser("wow")
   println(p2.toString + " => " + f(p2).toString)

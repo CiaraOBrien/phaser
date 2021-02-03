@@ -1,10 +1,12 @@
 import phaser.{_, given}
 
+import phaser.contraband._
+
 object Playground {
 
   def main(args: Array[String]): Unit = {
-    val test = "bruh"
-    println(lowerTest(test))
+    val test: String = "test"
+    lowerTest(5, "lmao")
   }
 
 }

@@ -1,7 +1,17 @@
-lazy val phaser = project.in(file("."))
+lazy val root = project.in(file("."))
+.aggregate(phaser.jvm)
+.settings(
+  Compile / sources := Nil,
+  Test    / sources := Nil,
+  publish           := {},
+  publishLocal      := {},
+  taste := (tasty / Compile / taste).value
+)
+
+lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("."))
 .settings(  
   name                 := "phaser",
-  version              := "0.1.0",
+  version              := "0.2.1",
   scalaVersion         := "3.0.0-M3",
   organization         := "edu.yale.cafferty",
   organizationName     := "Cafferty Lab",
@@ -16,12 +26,20 @@ lazy val phaser = project.in(file("."))
   homepage             := Some(url("https://github.com/CiaraOBrien/phaser")),
   publishMavenStyle    := true,
   libraryDependencies ++= Seq(
-     "org.typelevel"   %% "cats-core" % "2.3.1",
-     "io.monix"        %% "minitest"  % "2.9.2" % "test",
-    ("com.lihaoyi"     %% "scalatags" % "0.9.2" % "test").withDottyCompat(scalaVersion.value),
+     "org.typelevel" %%% "cats-core"    % "2.3.1",
   ),
   testFrameworks       += new TestFramework("minitest.runner.Framework"),
   parallelExecution    := false,
+  scalacOptions    ++= Seq(
+    "-source:3.1", "-indent", "-new-syntax",
+    "-Yexplicit-nulls", "-Ycheck-init", "-Yerased-terms",
+    "-language:strictEquality", 
+  )
+).jvmSettings(
+
+).jsSettings(
+  Compile / scalaJSUseMainModuleInitializer := true,
+	jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
 )
 
 val typerPhase    = "typer"
@@ -33,7 +51,7 @@ val printPhases   = Seq(macrosPhase, bytecodePhase)
 val taste         = taskKey[Unit]("Clean and run \"tasty\"")
 
 lazy val tasty = project.in(file("tasty"))
-.dependsOn(phaser)
+.dependsOn(phaser.jvm)
 .settings(
   name := "tasty-playground",
   scalaVersion := "3.0.0-M3",
@@ -42,7 +60,7 @@ lazy val tasty = project.in(file("tasty"))
   Compile / logBuffered      := true,
   Compile / scalacOptions    += ("-Xprint:" + printPhases.mkString(",")),
   Compile / taste := Def.sequential(
-    phaser / Compile / compile,
+    phaser.jvm / Compile / compile,
     Compile / clean,
     (Compile / run).toTask("")
   ).value,
