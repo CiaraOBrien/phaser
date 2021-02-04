@@ -47,8 +47,9 @@ val macrosPhase   = "staging"
 val erasurePhase  = "erasure"
 val lastPhase     = "collectSuperCalls"
 val bytecodePhase = "genBCode"
-val printPhases   = Seq(macrosPhase, bytecodePhase)
+val printPhases   = Seq()
 val taste         = taskKey[Unit]("Clean and run \"tasty\"")
+def makePrintOpt(phases: Seq[String]): Seq[String] = if (phases.isEmpty) Seq("") else Seq(printPhases.mkString("-Xprint:", ",", ""))
 
 lazy val tasty = project.in(file("tasty"))
 .dependsOn(phaser.jvm)
@@ -58,7 +59,7 @@ lazy val tasty = project.in(file("tasty"))
   Compile / scalaSource      := (ThisBuild / baseDirectory).value / "tasty",
   Test    / unmanagedSources := Nil,
   Compile / logBuffered      := true,
-  Compile / scalacOptions    += ("-Xprint:" + printPhases.mkString(",")),
+  Compile / scalacOptions   ++= makePrintOpt(printPhases),
   Compile / taste := Def.sequential(
     phaser.jvm / Compile / compile,
     Compile / clean,
