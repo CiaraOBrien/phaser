@@ -1,15 +1,18 @@
 import scala.quoted._
 import phaser._
 
+import phaser.lifts.LiftPureEta._
+
 inline def lowerTest(inline int: Int, inline str: String): Int = ${lowerTestMacro('int, 'str)}
 def lowerTestMacro(int: Expr[Int], str: Expr[String])(using q: Quotes, s: Type[String], i: Type[Int]): Expr[Int] = {
   import quotes.reflect._
 
-  println(MetaMacros.liftEta(test.Foo.Bar.quux)(str).show)
-  println(MetaMacros.liftEta(test.Foo.Bar.quux2)(int).show)
-  println(MetaMacros.liftEta(test.Foo.quux)(str).show)
-  //println(MetaMacros.liftEta((str: String) => str.concat("5"))(str).show)
+  def baz(s: String): String = "5" + s
 
+  println(liftE(test.Foo.Bar.quux)(str).show)
+  println(liftE(test.Foo.Bar.quux2)(int).show)
+  println(liftE(test.Foo.quux)(str).show)
+  println(liftE(baz)(str).show)
 
   val f = Phunction((s: String) => s.length, (e: Expr[String]) => '{ $e.length }).compose(Phunction(test.Foo.Bar.quux, '{test.Foo.Bar.quux}))
   println(f)

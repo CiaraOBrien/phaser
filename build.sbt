@@ -11,7 +11,7 @@ lazy val root = project.in(file("."))
 lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("."))
 .settings(  
   name                 := "phaser",
-  version              := "0.2.1",
+  version              := "0.3.0",
   scalaVersion         := "3.0.0-M3",
   organization         := "edu.yale.cafferty",
   organizationName     := "Cafferty Lab",
@@ -27,6 +27,8 @@ lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure
   publishMavenStyle    := true,
   libraryDependencies ++= Seq(
      "org.typelevel" %%% "cats-core"    % "2.3.1",
+     "app.tulz"      %%% "tuplez-full"  % "0.3.3",
+     "app.tulz"      %%% "tuplez-apply" % "0.3.3"
   ),
   testFrameworks       += new TestFramework("minitest.runner.Framework"),
   parallelExecution    := false,
