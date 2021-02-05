@@ -11,7 +11,7 @@ lazy val root = project.in(file("."))
 lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("."))
 .settings(  
   name                 := "phaser",
-  version              := "0.2.1",
+  version              := "0.3.0",
   scalaVersion         := "3.0.0-M3",
   organization         := "edu.yale.cafferty",
   organizationName     := "Cafferty Lab",
@@ -27,6 +27,8 @@ lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure
   publishMavenStyle    := true,
   libraryDependencies ++= Seq(
      "org.typelevel" %%% "cats-core"    % "2.3.1",
+     "app.tulz"      %%% "tuplez-full"  % "0.3.3",
+     "app.tulz"      %%% "tuplez-apply" % "0.3.3"
   ),
   testFrameworks       += new TestFramework("minitest.runner.Framework"),
   parallelExecution    := false,
@@ -47,8 +49,9 @@ val macrosPhase   = "staging"
 val erasurePhase  = "erasure"
 val lastPhase     = "collectSuperCalls"
 val bytecodePhase = "genBCode"
-val printPhases   = Seq(macrosPhase, bytecodePhase)
+val printPhases   = Seq()
 val taste         = taskKey[Unit]("Clean and run \"tasty\"")
+def makePrintOpt(phases: Seq[String]): Seq[String] = if (phases.isEmpty) Seq("") else Seq(printPhases.mkString("-Xprint:", ",", ""))
 
 lazy val tasty = project.in(file("tasty"))
 .dependsOn(phaser.jvm)
@@ -58,7 +61,7 @@ lazy val tasty = project.in(file("tasty"))
   Compile / scalaSource      := (ThisBuild / baseDirectory).value / "tasty",
   Test    / unmanagedSources := Nil,
   Compile / logBuffered      := true,
-  Compile / scalacOptions    += ("-Xprint:" + printPhases.mkString(",")),
+  Compile / scalacOptions   ++= makePrintOpt(printPhases),
   Compile / taste := Def.sequential(
     phaser.jvm / Compile / compile,
     Compile / clean,
