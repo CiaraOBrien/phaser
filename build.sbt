@@ -27,8 +27,6 @@ lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure
   publishMavenStyle    := true,
   libraryDependencies ++= Seq(
      "org.typelevel" %%% "cats-core"    % "2.3.1",
-     "app.tulz"      %%% "tuplez-full"  % "0.3.3",
-     "app.tulz"      %%% "tuplez-apply" % "0.3.3"
   ),
   testFrameworks       += new TestFramework("minitest.runner.Framework"),
   parallelExecution    := false,

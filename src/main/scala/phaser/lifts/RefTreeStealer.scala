@@ -4,15 +4,23 @@ import scala.quoted._
 
 object RefTreeStealer {
 
-  val error = """More-complex function lifting is not yet supported. Currently, only implicitly-eta-expanded method calls"
-                |are available for automatic lifting. If you need a more complex function and can't express it as a static method,"
-                |You can supply both the A => B and Expr[A] => Expr[B] by hand yourself.""".stripMargin
+  def newFullName(using q: Quotes)(s: q.reflect.Symbol): String =
+    import q.reflect._
+    if s.flags.is(Flags.Package) then s.fullName
+    else if s.isClassDef then
+      if s.flags.is(Flags.Module) then
+        if s.name == "package$" then newFullName(s.owner)
+        else newFullName(s.owner) + "." + s.name.stripSuffix("$")
+      else newFullName(s.owner) + "." + s.name
+    else newFullName(s.owner)
 
   def steal(using q: Quotes)(tree: q.reflect.Term): List[q.reflect.Symbol] = 
     import q.reflect._; tree match
-      case s @  Select(t, _) => s.symbol :: steal(t)
-      case i:   Ident        => i.symbol :: Nil
-      case _ => report.error(error); ???
+      case s @  Select(t, _) => println(s"Stole Select(${s.symbol.fullName})"); s.symbol :: steal(t)
+      case i:   Ident        => println(s"Stole Ident(${i.symbol.fullName})"); i.symbol :: Nil
+      case e => report.error(s"""More-complex function lifting is not yet supported. Currently, only implicitly-eta-expanded method calls"
+                |are available for automatic lifting. If you need a more complex function and can't express it as a static method,"
+                |You can supply both the A => B and Expr[A] => Expr[B] by hand yourself. Failed at ${e.show(using Printer.TreeStructure)}""".stripMargin); ???
 
   def pack(using q: Quotes)(syms: List[q.reflect.Symbol]): List[RefStep] = 
     import q.reflect._
@@ -32,5 +40,13 @@ object RefTreeStealer {
   given RefStepToExpr(using ToExpr[String]): ToExpr[RefStep] with
     def apply(rs: RefStep)(using Quotes): Expr[RefStep] =
       '{RefStep(${Expr(rs.name)}, ${Expr(rs.typeHint)}, ${Expr(rs.mangledName)})}
+  
+  inline def materialize[F](inline symStr: String): F = ${ materializeImpl('symStr) }
+
+  private def materializeImpl[F : Type](symStr: Expr[String])(using Quotes): Expr[F] = {
+    import quotes.reflect._
+    println(symStr.asTerm)
+    Ref(Symbol.requiredModule(symStr.value.get)).asExprOf[F]
+  }
 
 }

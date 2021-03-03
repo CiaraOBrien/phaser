@@ -2,29 +2,57 @@ import scala.quoted._
 import phaser._
 
 import phaser.lifts.LiftPureEta._
+import cats.{Alternative, Monad, Monoid}
+import cats.implicits.{_, given}
+import cats.data.Chain
+import cats.data.Chain.{_, given}
 
-inline def lowerTest(inline int: Int, inline str: String): Int = ${lowerTestMacro('int, 'str)}
-def lowerTestMacro(int: Expr[Int], str: Expr[String])(using q: Quotes, s: Type[String], i: Type[Int]): Expr[Int] = {
+inline def lowerTest(inline dyn: Int, inline static: Int, inline str: String): String = ${lowerTestMacro('dyn, 'static, 'str)}
+def lowerTestMacro(dyn: Expr[Int], static: Expr[Int], str: Expr[String])(using q: Quotes, s: Type[String], i: Type[Int]): Expr[String] = {
   import quotes.reflect._
-
+  import phaser.contraband.given
+  
   def baz(s: String): String = "5" + s
 
-  println(liftE(test.Foo.Bar.quux)(str).show)
-  println(liftE(test.Foo.Bar.quux2)(int).show)
-  println(liftE(test.Foo.quux)(str).show)
-  println(liftE(baz)(str).show)
+  // FromExpr
+  println('{Chain.concat(Chain(5, 6, $dyn, 8), Chain.one(7))}.value) // Should fail
+  println('{Chain.concat(Chain(5, 6, $static, 8), Chain.one(7))}.value)
+  println('{Chain.concat(Chain(5, 6, $static, 8), Chain.empty[Int])}.value)
+  println('{Monoid[Chain[Int]].combine(Chain(5, 6, $dyn, 8), Chain.one(7))}.value) // Should fail
+  println('{Monoid[Chain[Int]].combine(Chain(5, 6, $static, 8), Chain.one(7))}.value)
+  println('{Alternative[Chain].combineK(Chain(5, 6, $dyn, 8), Chain.one(7))}.value) // Should fail
+  println('{Alternative[Chain].combineK(Chain(5, 6, $static, 8), Chain.one(7))}.value)
+  println('{Chain(2, 6, $dyn,    8, 9, 7).reverse}.value) // Should fail
+  println('{Chain(2, 6, $static, 8, 9, 7).reverse}.value)
+  println('{Chain(2, 6, $dyn,    8).append($static)}.value) // Should fail
+  println('{Chain(2, 6, $static, 8).append($static)}.value)
+  // ToExpr vs quoted vs FromExpr value
+  println(Expr(Chain(1, 2, 3, 4, 5)).asTerm.show(using Printer.TreeAnsiCode))
+  println(Expr(Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3))).asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3))}.asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3))}.value)
 
-  val f = Phunction((s: String) => s.length, (e: Expr[String]) => '{ $e.length }).compose(Phunction(test.Foo.Bar.quux, '{test.Foo.Bar.quux}))
-  println(f)
-  val p1 = str.require("String", _.nonEmpty, "must not be empty")
-  println(p1.toString + " => " + f(p1).toString)
-  val p2 = Phaser("wow")
-  println(p2.toString + " => " + f(p2).toString)
+  println(Expr(Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3)).append(16)).asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3)).append(16)}.asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3)).append(16)}.value)
 
-  val l1 = f(p1)
-  val l2 = f(p2)
-  val fc = Phunction((i1: Int, i2: Int) => i1 + i2, (i1: Expr[Int], i2: Expr[Int]) => '{$i1 + $i2})
-  println(fc)
-  fc(l1, l2).defer.expr
+  println(Expr(Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3).reverse).append(16)).asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3).reverse).append(16)}.asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, 8), Chain(9, 52, 3).reverse).append(16)}.value)
+
+  println(Expr(Alternative[Chain].combineK(Chain(5, 6, 3, 4), Chain(9, 52, 3).reverse).append(16)).asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, $dyn),      Chain(9, 52, 3).reverse).append(16)}.asTerm.show(using Printer.TreeAnsiCode))
+  println(   '{Alternative[Chain].combineK(Chain(5, 6, 3, $dyn),      Chain(9, 52, 3).reverse).append(16)}.value) // Should fail
+    
+  //liftE(test.Foo.Bar.quux)(str)                       // - Yes
+  //liftE(test.Foo.Bar.quux2)(int)                      // - Yes
+  //liftE(test.Foo.quux)(str)                           // - Yes
+  //liftE(baz)(str)                                     // - No - fails with a type error because it can't access it from _root_
+  //liftE(test.asdf)(str)
+  //liftE(qwerty)(str).show)                            // - No - fails with a type error because it can't access it from _root_
+  //liftE((str: String) => str + "4")(str)
+  //liftE((str: String) => test.Foo.Bar.quux(str))(str)
+  //liftE((str: String) => str)(str)
+  Expr("")
 }
 
