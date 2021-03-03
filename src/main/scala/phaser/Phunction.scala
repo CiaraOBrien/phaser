@@ -1,8 +1,6 @@
 package phaser
 
-import scala.quoted._
-
-import cats.arrow.Arrow
+import scala.quoted.*
 
 /** The equivalent of a function for `Phaser`, because due to the `Option`ality of `FromExpr`, `Phaser`
   * does not form a lawful functor unless you throw away everything useful about it. 

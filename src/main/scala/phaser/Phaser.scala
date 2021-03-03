@@ -1,6 +1,6 @@
 package phaser
 
-import scala.quoted._
+import scala.quoted.*
 
 /** A datatype that, alongside `Phunction`, facilitates value-oriented metaprogramming, by allowing you to
   * abstract over the uncertainty and boilerplate of "hoisting" values from stage 1 to stage 0.
@@ -10,7 +10,7 @@ import scala.quoted._
   * that actually has `ToExpr`. */
 sealed trait Phaser[A : Type](using Quotes) {
 
-  import quotes.reflect._
+  import quotes.reflect.*
 
   /** Returns `true` if this is `Static`, `false` if `Dynamic`. */
   def isStatic: Boolean = this match

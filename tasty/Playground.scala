@@ -1,8 +1,8 @@
-import phaser.{_, given}
+import phaser.{*, given}
 
-import phaser.contraband._
-import phaser.lifts._
-import scala.quoted._
+import phaser.contraband.*
+import phaser.lifts.*
+import scala.quoted.*
 
 object Playground {
 

@@ -1,15 +1,15 @@
 import scala.quoted._
 import phaser._
 
-import phaser.lifts.LiftPureEta._
+import phaser.lifts.LiftPureEta.*
 import cats.{Alternative, Monad, Monoid}
-import cats.implicits.{_, given}
+import cats.implicits.{*, given}
 import cats.data.Chain
-import cats.data.Chain.{_, given}
+import cats.data.Chain.{*, given}
 
 inline def lowerTest(inline dyn: Int, inline static: Int, inline str: String): String = ${lowerTestMacro('dyn, 'static, 'str)}
 def lowerTestMacro(dyn: Expr[Int], static: Expr[Int], str: Expr[String])(using q: Quotes, s: Type[String], i: Type[Int]): Expr[String] = {
-  import quotes.reflect._
+  import quotes.reflect.*
   import phaser.contraband.given
   
   def baz(s: String): String = "5" + s

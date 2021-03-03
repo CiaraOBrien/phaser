@@ -1,18 +1,18 @@
 package phaser.lifts
 
-import scala.quoted._
+import scala.quoted.*
 
-import RefTreeStealer._
+import RefTreeStealer.*
 
 object LiftPureEta {
 
   inline def liftE[A: Type, B: Type](inline f: A => B)(using q: Quotes): Expr[A] => Expr[B] =
-    import q.reflect._;
+    import q.reflect.*;
     (e: Expr[A]) => RefTreeStealer.buildTree(parseEtaCall(f)).appliedTo(e.asTerm).asExprOf[B]
 
   private inline def parseEtaCall[A, B](inline eta: A => B)(using q: Quotes): List[RefStep] = ${ parseEtaCallMacro('eta) }
   private def parseEtaCallMacro[A : Type, B : Type](eta: Expr[A => B])(using q: Quotes): Expr[List[RefStep]] =
-    import quotes.reflect._
+    import quotes.reflect.*
     println(eta.show); println(eta.asTerm.show(using Printer.TreeStructure));
     def unwrapLambda(tree: Term): List[Symbol] = tree match 
       case Lambda(params, Apply(r, _)) => RefTreeStealer.steal(r)
@@ -30,7 +30,7 @@ object GenericFromExpr {
 
   inline def compileTime[T](inline expr: T)(using inline fe: FromExpr[T]): String = ${compileTimeImpl('expr, 'fe)}
   private def compileTimeImpl[T : Type, F <: FromExpr[T] : Type](expr: Expr[T], from: Expr[F])(using Quotes): Expr[String] = 
-    import quotes.reflect._
+    import quotes.reflect.*
     def unwrap(tree: Term): TypeRepr = tree match 
       case i @ Ident(s)          => i.tpe
       case TypeApply(i, _)       => unwrap(i)

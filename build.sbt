@@ -11,8 +11,8 @@ lazy val root = project.in(file("."))
 lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure).in(file("."))
 .settings(  
   name                 := "phaser",
-  version              := "0.3.0",
-  scalaVersion         := "3.0.0-M3",
+  version              := "0.3.1",
+  scalaVersion         := "3.0.0-RC1",
   organization         := "edu.yale.cafferty",
   organizationName     := "Cafferty Lab",
   organizationHomepage := Some(url("https://www.caffertylab.org/")),
@@ -26,14 +26,14 @@ lazy val phaser = crossProject(JVMPlatform, JSPlatform).crossType(CrossType.Pure
   homepage             := Some(url("https://github.com/CiaraOBrien/phaser")),
   publishMavenStyle    := true,
   libraryDependencies ++= Seq(
-     "org.typelevel" %%% "cats-core"    % "2.3.1",
+     "org.typelevel" %%% "cats-core" % "2.4.2",
   ),
   testFrameworks       += new TestFramework("minitest.runner.Framework"),
   parallelExecution    := false,
   scalacOptions    ++= Seq(
-    "-source:3.1", "-indent", "-new-syntax",
+    "-source:future", "-indent", "-new-syntax",
     "-Yexplicit-nulls", "-Ycheck-init", "-Yerased-terms",
-    "-language:strictEquality", 
+    "-language:strictEquality",
   )
 ).jvmSettings(
 

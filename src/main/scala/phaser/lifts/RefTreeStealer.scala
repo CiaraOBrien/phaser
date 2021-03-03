@@ -1,11 +1,11 @@
 package phaser.lifts
 
-import scala.quoted._
+import scala.quoted.*
 
 object RefTreeStealer {
 
   def newFullName(using q: Quotes)(s: q.reflect.Symbol): String =
-    import q.reflect._
+    import q.reflect.*
     if s.flags.is(Flags.Package) then s.fullName
     else if s.isClassDef then
       if s.flags.is(Flags.Module) then
@@ -15,7 +15,7 @@ object RefTreeStealer {
     else newFullName(s.owner)
 
   def steal(using q: Quotes)(tree: q.reflect.Term): List[q.reflect.Symbol] = 
-    import q.reflect._; tree match
+    import q.reflect.*; tree match
       case s @  Select(t, _) => println(s"Stole Select(${s.symbol.fullName})"); s.symbol :: steal(t)
       case i:   Ident        => println(s"Stole Ident(${i.symbol.fullName})"); i.symbol :: Nil
       case e => report.error(s"""More-complex function lifting is not yet supported. Currently, only implicitly-eta-expanded method calls"
@@ -23,7 +23,7 @@ object RefTreeStealer {
                 |You can supply both the A => B and Expr[A] => Expr[B] by hand yourself. Failed at ${e.show(using Printer.TreeStructure)}""".stripMargin); ???
 
   def pack(using q: Quotes)(syms: List[q.reflect.Symbol]): List[RefStep] = 
-    import q.reflect._
+    import q.reflect.*
     def typeHint(s: Symbol): String = {
       val str = s.toString.nn
       str.substring(0, str.length() - s.name.length()).trim.nn
@@ -31,7 +31,7 @@ object RefTreeStealer {
     syms.map(s => RefStep(s.name, typeHint(s), s.fullName))
 
   def buildTree(steps: List[RefStep])(using q: Quotes): q.reflect.Ref = 
-    import q.reflect._
+    import q.reflect.*
     Ref.term(steps.foldRight { TypeIdent(defn.RootClass).tpe } {
       (step: RefStep, tpe: TypeRepr) => TermRef(tpe, step.name)
     }.asInstanceOf[TermRef])
@@ -44,7 +44,7 @@ object RefTreeStealer {
   inline def materialize[F](inline symStr: String): F = ${ materializeImpl('symStr) }
 
   private def materializeImpl[F : Type](symStr: Expr[String])(using Quotes): Expr[F] = {
-    import quotes.reflect._
+    import quotes.reflect.*
     println(symStr.asTerm)
     Ref(Symbol.requiredModule(symStr.value.get)).asExprOf[F]
   }

@@ -1,6 +1,6 @@
 package phaser
 
-import scala.quoted._
+import scala.quoted.*
 
 extension [A : Type : FromExpr](e: Expr[A])(using Quotes)
   def require(desc: String, validate: A => Boolean = ((a: A) => true), as: String = "failed to validate"): Static[A] = 

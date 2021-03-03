@@ -1,6 +1,6 @@
 package phaser.contraband
 
-import scala.quoted._
+import scala.quoted.*
 import cats.data.Chain
 
 final class Patsy private[contraband] () {
@@ -13,7 +13,7 @@ inline def putPatsy: Patsy = smuggle(Chain.empty)
 
 inline def passMessage(inline p: Patsy, inline m: String): Patsy = ${ passMessageMacro('p, 'm) }
 def passMessageMacro(patsy: Expr[Patsy], message: Expr[String])(using Quotes): Expr[Patsy] =
-  import quotes.reflect._
+  import quotes.reflect.*
   patsy match 
     case '{ smuggle(${Expr(contraband)}) } => '{ smuggle(${Expr(contraband)}) }
     case e => patsy
@@ -21,8 +21,8 @@ def passMessageMacro(patsy: Expr[Patsy], message: Expr[String])(using Quotes): E
 given ChainFromExpr[A: Type](using f: FromExpr[A]): FromExpr[Chain[A]] with
   // Some of the type parameters on the right hand sides are unnecessary
   def unapply(a: Expr[Chain[A]])(using Quotes) = 
-    import quotes.reflect._
-    import cats.data.Chain.{catsDataInstancesForChain => inst, catsDataMonoidForChain => monoid}
+    import quotes.reflect.*
+    import cats.data.Chain.{catsDataInstancesForChain as inst, catsDataMonoidForChain as monoid}
     a match 
     // An illustration of the limitations of `Varargs` and `Exprs`: we still need to ascribe to varargs
     // on both sides of the arrow, and `Exprs` pretty much only works alongside `Varargs`.
@@ -34,7 +34,7 @@ given ChainFromExpr[A: Type](using f: FromExpr[A]): FromExpr[Chain[A]] with
     // FromExpr[Seq[A]] is implemented using Varargs, while Varargs itself is implemented
     // with limited recursion over a TASTy tree with only the relevant extractors -
     // a very useful pattern for precise extraction of values from complex expressions.
-    case '{ Chain.apply  [A](${ Varargs(Exprs(elems)) }: _*) } => Some(Chain.apply[A](elems: _*))
+    case '{ Chain.apply  [A](${ Varargs(Exprs(elems)) }*) } => Some(Chain.apply[A](elems*))
     // No need to invoke Varargs, just FromExpr[Seq[A]]
     case '{ Chain.fromSeq[A](${ Expr(elems) }) } => Some(Chain.fromSeq[A](elems))
     // These can be |'d together because we don't need to preserve any pattern params
@@ -85,4 +85,4 @@ given ChainFromExpr[A: Type](using f: FromExpr[A]): FromExpr[Chain[A]] with
 // This is done by generating forwarders, but they're quite robust and seamless.
 given ChainToExpr[A: Type](using t: ToExpr[A]): ToExpr[Chain[A]] with
   def apply(chain: Chain[A])(using Quotes): Expr[Chain[A]] =
-    '{ Chain.apply[A](${Varargs(chain.iterator.map(t.apply).toList)}: _*) }
+    '{ Chain.apply[A](${Varargs(chain.iterator.map(t.apply).toList)}*) }
